@@ -1,0 +1,62 @@
+services:
+    app:
+        image: php:8.2-apache
+        container_name: laravel_app
+        restart: always
+        working_dir: /var/www
+        volumes:
+            - .:/var/www
+        ports:
+            - 8000:80
+        depends_on:
+            - mariadb
+            - ollama
+        environment:
+            - APP_ENV=local
+            - APP_DEBUG=true
+            - APP_KEY=${APP_KEY}
+            - APP_URL=http://localhost:8000
+            - AI_API_URL=http://ollama:11434/api/generate
+            - DB_CONNECTION=mariadb
+            - DB_HOST=mariadb
+            - DB_PORT=3306
+            - DB_DATABASE=mariadb
+            - DB_USERNAME=mariadb
+            - DB_PASSWORD=annaAIAPI
+        build:
+            context: .
+            dockerfile: Dockerfile
+
+    mariadb:
+        image: mariadb:latest
+        restart: always
+        container_name: mariadb
+        environment:
+            MARIADB_ROOT_PASSWORD: mariadb
+            MYSQL_USER: mariadb
+            MYSQL_PASSWORD: annaAIAPI
+            MYSQL_DATABASE: mariadb
+        ports:
+            - 3306:3306
+        volumes:
+            - mariadb_data:/var/lib/mysql
+
+    adminer:
+        image: adminer:latest
+        restart: always
+        container_name: adminer
+        ports:
+            - 8080:8080
+
+    ollama:
+        image: ollama/ollama
+        container_name: ollama
+        restart: always
+        ports:
+            - 11434:11434
+        volumes:
+            - ollama_data:/root/.ollama
+
+volumes:
+    mariadb_data:
+    ollama_data:
