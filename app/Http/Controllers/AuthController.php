@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str; 
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -17,13 +18,14 @@ class AuthController extends Controller
                 'password' => 'required|confirmed|min:8',
             ]);
 
-            User::create([
+            $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'api_token' => Str::random(60),
             ]);
 
-            return response()->json(['message' => 'New user registered'], 201);
+            return response()->json(['message' => 'New user registered', 'token' => $user->api_token], 201);
         } catch(\Exception $e) {
             return response()->json(['message' => 'Registration failed'], 400);
         }
@@ -44,9 +46,10 @@ class AuthController extends Controller
                 ]);
             }
 
-            $token = $user->createToken('accessToken');
+            $user->api_token = Str::random(60);
+            $user->save();
 
-            return response()->json(['accessToken' => $token->plainTextToken], 200);
+            return response()->json(['accessToken' => $user->api_token], 200);
         } catch(\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 401);
         }
